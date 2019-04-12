@@ -245,7 +245,15 @@ end
 
 
 function mouvement(objet)
+  if love.keyboard.isDown("z") then
+  objet.rot = objet.rot+   math.rad(1)
   
+end
+
+  if love.keyboard.isDown("s") then
+  objet.rot = objet.rot+   math.rad(-1)
+  
+end
   if love.keyboard.isDown("up") then
   objet.position[2] =   objet.position[2] - 5
   

@@ -309,9 +309,9 @@ function SAT.poly_poly(sat_object_a, sat_object_b, is_point_needed)
     overlap = math.line_overlap(min_a, max_a, min_b, max_b)
 
 
-    --print(i)
-    --print(axes[i][1],axes[i][2])
-    --print(min_a, max_a, min_b, max_b,overlap)
+    print(i)
+    print(axes[i][1],axes[i][2])
+    print(min_a, max_a, min_b, max_b,overlap)
     if overlap == 0 then
       return false
     end
@@ -321,7 +321,7 @@ function SAT.poly_poly(sat_object_a, sat_object_b, is_point_needed)
       sat_a = true
       sat_b = false
     else
-      if overlap < min_overlap then
+      if overlap <= min_overlap then
         -- Save the min_overlap, and the index of the axis
         min_overlap = overlap
         mtv_axis_index = i
@@ -351,7 +351,7 @@ function SAT.poly_poly(sat_object_a, sat_object_b, is_point_needed)
 
   else
     local pas = (#sat_object_b.vertices/2)
-      mtv_axis_index = mtv_axis_index +pas > #sat_object_b.vertices+#sat_object_a.vertices and #sat_object_a.vertices+#sat_object_a.vertices+1 or  mtv_axis_index +pas 
+      mtv_axis_index = mtv_axis_index +pas > #sat_object_b.vertices+#sat_object_a.vertices and #sat_object_a.vertices+1 or  mtv_axis_index +pas 
       face_index = mtv_axis_index
     end
 
@@ -404,7 +404,11 @@ function SAT.poly_poly(sat_object_a, sat_object_b, is_point_needed)
   
   local point = {}
   if  vector.is_para(v1,v2) then
-    point = {(first_face[1][1] + first_face[2][1])/2, (first_face[1][2] + first_face[2][2])/2}
+    if sat_a then
+      point = {(first_face[1][1] + first_face[2][1])/2, (first_face[1][2] + first_face[2][2])/2}
+    else
+      point = {(second_face[1][1] + second_face[2][1])/2, (second_face[1][2] + second_face[2][2])/2}
+    end
   else
     -- return the nearest point 
 
