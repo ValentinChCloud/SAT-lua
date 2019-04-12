@@ -19,7 +19,7 @@ function vector.dot(v1,v2) return v1[1]*v2[1] + v1[2]*v2[2] end
 function vector.magnitude(v1) return math.sqrt(v1[1]*v1[1] + v1[2]*v1[2]) end
 
 function vector.is_para(v1, v2)
-  if v1[1]*v2[2] == v1[2]*v2[1] then
+  if math.round(v1[1]*v2[2]) == math.round(v1[2]*v2[1]) then
     return true
   end
   

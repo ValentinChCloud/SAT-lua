@@ -407,14 +407,30 @@ function SAT.poly_poly(sat_object_a, sat_object_b, is_point_needed)
     point = {(first_face[1][1] + first_face[2][1])/2, (first_face[1][2] + first_face[2][2])/2}
   else
     -- return the nearest point 
-    if sat_a then
-     point =  SAT.found_nearest_vertex(sat_object_a.position, second_face)
+
+   if sat_a then
+      local ax = vector.multiply_vector(  axes[mtv_axis_index],-1)
+      if vector.dot(ax, second_face[1]) < vector.dot(ax, second_face[2]) then
+        point = second_face[1]
+      else
+        point = second_face[2]
+      end
+ --    point =  SAT.found_nearest_vertex(sat_object_a.position, second_face)
      
     else
-     point =  SAT.found_nearest_vertex(sat_object_b.position, second_face)
+      if vector.dot(axes[mtv_axis_index], second_face[1]) < vector.dot(axes[mtv_axis_index], second_face[2]) then
+        point = second_face[1]
+      else
+        point = second_face[2]
+      end
+ --    point =  SAT.found_nearest_vertex(sat_object_a.position, second_face)
+     --point =  SAT.found_nearest_vertex(sat_object_b.position, second_face)
      
-    point = vector.addition(point, vector.multiply_vector(axes[mtv_axis_index],min_overlap))
-    end
+   -- point = vector.addition(point, vector.multiply_vector(axes[mtv_axis_index],min_overlap))
+  end
+  
+  
+  
   end
 
 

@@ -79,11 +79,11 @@ function love.load()
   circles = {}
   rectangles = {}
   polys = {}
-  my_rectangle = { position = { 600,  400}, size = { 50,  50}, rot = 0 }
+  my_rectangle = { position = { 600,  400}, size = { 50,  50}, rot = math.pi/4 }
   my_circle = { position = { 400,  100}, radius = 45 }
   
   
-  for i=1, 100 do
+  for i=1, 0 do
     local poly = poly_regular(6,50,{50+i*150,300})
     
     table.insert(polys,poly)
@@ -91,19 +91,19 @@ function love.load()
   
   
   
-  for i=1, 100 do
+  for i=1, 0 do
     local circle = { position = {  100+(50*i-1),  200}, radius = 50 }
       table.insert(circles,circle)
   end
 
 
-  for i=1, 100 do
-    local rectangle =  { position = {50+(50*i-1), 400}, size = {25,25}, rot =0}
+  for i=1, 1 do
+    local rectangle =  { position = {50+(50*i-1), 400}, size = {150,25}, rot =math.pi/4}
     table.insert(rectangles,rectangle)
   end
 
 
-  for i=1, 100 do
+  for i=1, 0 do
     local rectangle =  { position = {-50+(50*i-1), 100}, size = {25,25}, rot = math.pi/i*2}
     table.insert(rectangles,rectangle)
   end
