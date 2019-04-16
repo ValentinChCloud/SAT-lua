@@ -78,6 +78,7 @@ end
 
 -- Rotate a vector according to an orgin 
 function vector.rotate(vecteur, origin, angle)
+  -- Take the negatives, because origin axis is in the left corner.
   local sinus = math.sin(-angle)
   local cosinus = math.cos(-angle)
 
@@ -114,7 +115,7 @@ end
 
 local SAT = {}
 
--- Create a new SAT object. But I need the information type of he object I treat, and I don't want to impose a structure for your code
+-- Create a new SAT object. It needs type information  of the object.
 -- @collider : table, polygon collider or circler collider, it needs to have a type field, and a radius field for circle, and vertices for
 -- polygon
 -- @body : table, field : position
@@ -128,7 +129,7 @@ function SAT.new_shape(collider, body)
 
 end
 
--- Create a bodyfor your SAT object
+-- Create a body for your SAT object
 -- @position : table
 -- @shape_type : string
 -- return : table,  a new body
@@ -141,7 +142,7 @@ end
 
 
 
--- Create a bodyfor your SAT object
+-- Create a body for your SAT object
 -- @position : table
 -- @radius : int
 -- return : table, a new SAT circle object
@@ -164,7 +165,6 @@ function SAT.new_poly(position, vertices)
   new_poly.vertices = vertices
 
   return new_poly
-
 end
 
 -- Found the nearest vertex to a position
@@ -268,7 +268,7 @@ end
 -- Determine is two circle are colliding.
 -- @c_a : table, sat_object
 -- @c_b : table, sat_object
--- return : boolean, mtv_axis, mtv , point_of_collision
+-- return : boolean, mtv_axis, overlap , point_of_collision
 function SAT.circle_circle(c_a, c_b)
   -- Gets the vector between the two positions
   local v1 = vector.substract(c_a.position,c_b.position)
@@ -295,7 +295,7 @@ end
 -- Determine is a circle is colliding with a poly shape.
 -- @sat_object_a : table, sat_object
 -- @sat_object_b : table, sat_object
--- return : boolean, mtv_axis, mtv , point_of_collision
+-- return : boolean, mtv_axis, overlap , point_of_collision
 function SAT.circle_poly(sat_object_a, sat_object_b)
   local poly = {}
   local circle = {}
@@ -365,7 +365,7 @@ function SAT.circle_poly(sat_object_a, sat_object_b)
 end
 
 
--- Determine is a circle is colliding with a poly shape.
+-- Project an object over an axis.
 -- @sat_object : table, sat_object
 -- @axis : table
 -- return : min, max, they are the minum and maximum overlap of the shap along the axis.
@@ -400,11 +400,10 @@ end
 -- Test if a poly shape  A , has a seprating axis with an poly shape B
 -- @sat_object_a : table, sat_object
 -- @sat_object_b : table, sat_object_b
--- return
+-- return : boolean, mtv_axis, overlap 
 function SAT.poly_poly(sat_object_a, sat_object_b)
 
-  -- First, we look for all the axis. I save it in the axes table, an array of axis
-  -- If the point is_point_needed, we will get the faces too, it will be use later, to determinethe intersection point
+  -- Look for all the axis. Save it in the axes table, an array of axis.
 
   local axes,faces = SAT.get_axes(sat_object_a.vertices, true)
   local axes_b,faces_b = SAT.get_axes(sat_object_b.vertices, true)
@@ -430,8 +429,8 @@ function SAT.poly_poly(sat_object_a, sat_object_b)
   local sat_a = false
   local sat_b = false
 
-  -- The mtv axis or , the axis with the minimil translation vector. Wich axis need the litle amount of effort to avoid collision
-  -- For the moment we will save it as the index of the axes table
+  -- The mtv axis, is the axis with the minimal translation vector needed to stop colliding.
+  -- For the moment, only save it as an index.
   local mtv_axis_index = 1
 
   for i = 1, #axes do
@@ -458,16 +457,16 @@ function SAT.poly_poly(sat_object_a, sat_object_b)
 
   end
 
-  -- The vector from the position of sat_object_b to sat_object_a. These vector will help us to determine if the mtv_axis
+  -- The vector from the position of sat_object_b to sat_object_a. These vector will help to determine if the mtv_axis
   -- is the correct one, and not the inverse one. The mtv_axis has to be in the opposite direction of these new vector.
   local p2_to_p1 = vector.substract(sat_object_a.position,sat_object_b.position)
-  local mtv_axe = axes[mtv_axis_index]
+  local mtv_axis = axes[mtv_axis_index]
   local face_index = mtv_axis_index
 
   if vector.dot(p2_to_p1,axes[mtv_axis_index]) <= 0 then
-    mtv_axe = vector.multiply(mtv_axe, -1)
+    mtv_axis = vector.multiply(mtv_axe, -1)
   end
-  return true, mtv_axe, min_overlap
+  return true, mtv_axis, min_overlap
 
 end
 

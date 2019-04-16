@@ -6,12 +6,14 @@ It's a simple Lua library for performing collision detection of simple 2D shapes
 The aim is to keep it simple as possible, so you don't change the structure of your code and how you store values.
 
 
-Also it's a first try, contributions are welcome;
+Also it's a first try, contributions are welcome.
 
 It supports detecting collisions between:
- - Circles - Circles
- - Circles - Convex polygons
- - Convex polygons - Convex polygons
+<ul>
+<li> - Circles - Circles </li>
+<li> - Circles - Convex polygons </li>
+<li>- Convex polygons - Convex polygons </li>
+</ul>
  
 If a circle is involved in the collision, it returns the point of collision on the circle.
 
@@ -21,7 +23,7 @@ It's released under the MIT license.
 
 # How to use 
 
-Get the repo, keep SAT.lua and erase files
+<strong> Get the repo, keep SAT.lua and erase files </strong>
 
 ```
 function love.load()
@@ -38,8 +40,8 @@ function love.update()
 	-- collider.vertices -- if it's a polygon
 	-- collider.radius -- if it's a circle
 	
-	-- body must be a table as {400,400}
-	local shape_a = SAT.new_shape(collider_a, body_b)
+	-- body must be a table as  like {400,400}
+	local shape_a = SAT.new_shape(collider_a, body_a)
 	local shape_b = SAT.new_shape(collider_b, body_b)
 	
 	
@@ -54,3 +56,8 @@ function love.update()
 end
 
 ``` 
+
+
+# Update futur 
+Get the point of collision and faces involded in polygon - polygon collision.
+I have already something but the code is too dirty and some issues have to fix.
