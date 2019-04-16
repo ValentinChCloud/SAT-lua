@@ -1,5 +1,36 @@
+--[[
+MIT License
 
-vector = require("lib.vector")
+Copyright (c) 2019 Valentin Chambon
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+--]]
+
+
+
+
+
+
+------------------------------------------------------------------
+-- MATH functions
+------------------------------------------------------------------
+function math.round(n, deci) deci = 10^(deci or 0) return math.floor(n*deci+.5)/deci end
 
 function math.dist(point_a, point_b) return ((point_b[1]-point_a[1])^2+(point_b[2]-point_a[2])^2)^0.5 end
 
@@ -14,6 +45,65 @@ function math.line_overlap(a_min, a_max, b_min, b_max)
 
 end
 
+------------------------------------------------------------------
+-- VECTOR functions
+------------------------------------------------------------------
+
+
+local vector = {}
+
+
+
+function vector.addition(v1,v2) return {v1[1]+v2[1],v1[2]+v2[2]} end
+
+
+
+function vector.substract(v1, v2) return {v1[1]-v2[1],v1[2]-v2[2]} end
+
+-- Multiply a vector by a scalar
+function vector.multiply(vector, scale) return {vector[1] *scale, vector[2] * scale} end
+
+-- Dot product between two vector
+function vector.dot(v1,v2) return v1[1]*v2[1] + v1[2]*v2[2] end
+
+
+function vector.magnitude(v1) return math.sqrt(v1[1]*v1[1] + v1[2]*v1[2]) end
+
+function vector.normalize(v1)  
+  local unit = vector.magnitude(v1)
+
+  return {v1[1]/unit, v1[2]/unit }
+end
+
+
+-- Rotate a vector according to an orgin 
+function vector.rotate(vecteur, origin, angle)
+  local sinus = math.sin(-angle)
+  local cosinus = math.cos(-angle)
+
+  local x1 = vecteur[1] - origin[1]
+  local y1 = vecteur[2] - origin[2]
+   x = math.round(x1 * cosinus - y1 *sinus,2)
+   y  = math.round(x1 * sinus + y1 * cosinus,2)
+
+  local new_vector = { x + origin[1],y +origin[2]  }
+
+  return new_vector
+end
+
+
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------------
+-- SAT functions
+------------------------------------------------------------------
 -- Separating Axis theorem, for detect collision between oriented objetcs
 -- Three main functions :
 --  circle_cirlce 
@@ -24,11 +114,25 @@ end
 
 local SAT = {}
 
--- Create a new SAT object. At first I didn"t want to this, but for the function circle_poly I needed the object to be passe in the
--- same order, the colider in first position, or these function could be use with a circle collider or a polygon circle.
+-- Create a new SAT object. But I need the information type of he object I treat, and I don't want to impose a structure for your code
+-- @collider : table, polygon collider or circler collider, it needs to have a type field, and a radius field for circle, and vertices for
+-- polygon
+-- @body : table, field : position
+-- return : table, new SAT object
+function SAT.new_shape(collider, body)
+  if collider.type == "circle" then
+    return  SAT.new_circle(body.position, collider.radius)
+  else
+    return  SAT.new_poly(body.position, collider.vertices)
+  end
+
+end
+
+-- Create a bodyfor your SAT object
 -- @position : table
--- @type : string; circle, polygone
-function SAT.new_body( position, shape_type)
+-- @shape_type : string
+-- return : table,  a new body
+function SAT.new_body(position, shape_type)
   assert(type(position) == "table")
   assert(type(shape_type) == "string")
   local new_body = { position = position, type = shape_type}
@@ -36,12 +140,24 @@ function SAT.new_body( position, shape_type)
 end
 
 
+
+-- Create a bodyfor your SAT object
+-- @position : table
+-- @radius : int
+-- return : table, a new SAT circle object
+
 function SAT.new_circle(position, radius)
   local new_circle = SAT.new_body(position, "circle")
   new_circle.radius = radius
 
   return new_circle
 end
+
+-- Create a body for your SAT object
+-- @position : table
+-- @vertices : table
+-- return : table, a new SAT polygon object
+
 
 function SAT.new_poly(position, vertices)
   local new_poly = SAT.new_body(position, "poly")
@@ -51,12 +167,10 @@ function SAT.new_poly(position, vertices)
 
 end
 
-
-
-
+-- Found the nearest vertex to a position
 -- @position : table
 -- @vertices : table
--- return : the vertex the nearest 
+-- return : table, the nearest vertex 
 function SAT.found_nearest_vertex (position, vertices)
   local min = math.dist(position, vertices[1])
   local d = 0
@@ -71,10 +185,10 @@ function SAT.found_nearest_vertex (position, vertices)
   return vertices[index]
 end
 
-
+-- Get all the axes from a shape. Iterating over all edge, normalize it and rotate from 90 °
 -- @vertices : table
 -- @faces_mod : boolean , if true, it will return the edge associated to the axis
--- return : table of all axis found for theses vertices and the faces associated are optionnal
+-- return : table, of all axis found for theses vertices and the faces associated are optionnal
 function SAT.get_axes(vertices, faces_mod)
   local v1 = {}
   local v2 = {}
@@ -86,7 +200,7 @@ function SAT.get_axes(vertices, faces_mod)
   for i = 1, #vertices do
     v1 = vertices[i]
     v2 = vertices[i+1 == #vertices+1 and 1 or i+1]
-    normal = vector.normalize(vector.substract_vector(v2,v1))
+    normal = vector.normalize(vector.substract(v2,v1))
     axis = vector.rotate(normal, {0,0}, math.pi/2)
     table.insert(axes, axis)
     table.insert(faces,{v1,v2})
@@ -99,21 +213,25 @@ function SAT.get_axes(vertices, faces_mod)
 end
 
 
-
+-- Found the nearest edge to another edge. In SAT, the nearest edge after found the separating axis, is the edge with the less dot product
+-- over this faces.
+-- @face : table,  e.g-- {{100,100},{200,200}}
+-- @vertices : table
+-- return : table, the nearest vertex 
 
 function SAT.found_nearest_edge(face, vertices)
   local v1 = vertices[1]
   local v2 = vertices[2]
-  local face_vector = vector.substract_vector(face[2],face[1])
-  
-  local dot = vector.dot(vector.substract_vector(v2, v1), face_vector)
+  local face_vector = vector.substract(face[2],face[1])
+
+  local dot = vector.dot(vector.substract(v2, v1), face_vector)
   local min_dot = dot
   local second_face = {v2, v1}
   local index = 1
   for i = 2, #vertices do
     v1  = vertices[i]
     v2  = vertices[i+1 == #vertices+1 and 1 or i+1]
-    dot = vector.dot(vector.substract_vector(v2,v1),face_vector)
+    dot = vector.dot(vector.substract(v2,v1),face_vector)
     if dot < min_dot then
       min_dot = dot
       index = i
@@ -125,10 +243,32 @@ function SAT.found_nearest_edge(face, vertices)
 end
 
 
+-- @sat_object_a : table, sat_object, it's your object
+-- @sat_object_b :table, sat_object, it's the object you want to test if it collides with
+-- return : boolean, mtv_axis, mtv --if there is a circle object, return the intersection point on the circle.
+
+function SAT.is_colliding( sat_object_a, sat_object_b)
+  if sat_object_a.type == "poly" then
+    if sat_object_b.type == "poly" then
+      return   SAT.poly_poly(sat_object_a,sat_object_b)
+    else
+      return SAT.circle_poly(sat_object_a,sat_object_b)
+    end
+
+  elseif sat_object_b.type == "poly" then
+    return SAT.poly_poly(sat_object_a,sat_object_b)
+
+  else
+
+    return SAT.circle_circle(sat_object_a,sat_object_b)
+  end
+
+end
+
 
 function SAT.circle_circle(c_a, c_b, mode)
   -- Gets the vector between the two positions
-  local v1 = vector.substract_vector(c_a.position,c_b.position)
+  local v1 = vector.substract(c_a.position,c_b.position)
   -- Gets its magnitude
   local d =  vector.magnitude(v1)
   -- Gets the distance total of the addition of both radius
@@ -142,7 +282,7 @@ function SAT.circle_circle(c_a, c_b, mode)
     local mtv = radius_plus_radius - d
 
     if mode then
-      local point = vector.addition( c_a.position, vector.multiply_vector(vector.multiply_vector(mtv_axis,-1),c_a.radius- mtv))
+      local point = vector.addition( c_a.position, vector.multiply(vector.multiply(mtv_axis,-1),c_a.radius- mtv))
       return true, mtv_axis, mtv,point
     else
       return true, mtv_axis, mtv
@@ -154,7 +294,7 @@ end
 
 
 -- body
-function SAT.circle_poly(sat_object_a, sat_object_b, mode)
+function SAT.circle_poly(sat_object_a, sat_object_b)
   local poly = {}
   local circle = {}
 
@@ -171,7 +311,7 @@ function SAT.circle_poly(sat_object_a, sat_object_b, mode)
   local vertex,index = SAT.found_nearest_vertex(circle.position, poly.vertices)
 
   -- The last axis, is the axis between the center of the circle to the nearest vertex of the polygon.
-  local last_axis = vector.normalize(vector.substract_vector(vertex,circle.position))
+  local last_axis = vector.normalize(vector.substract(vertex,circle.position))
   table.insert(axes,last_axis)
 
 
@@ -181,9 +321,6 @@ function SAT.circle_poly(sat_object_a, sat_object_b, mode)
   local mtv_axis_index = 1
 
   for i = 1 , #axes do
-
-
-
 
     local min_a,max_a = SAT.projection(circle, axes[i])
     local min_b,max_b = SAT.projection(poly, axes[i])
@@ -205,25 +342,22 @@ function SAT.circle_poly(sat_object_a, sat_object_b, mode)
     end
   end
 
-  local p2_to_p1 = vector.substract_vector(sat_object_b.position,sat_object_a.position)
+  local p2_to_p1 = vector.substract(sat_object_a.position,sat_object_b.position)
   local mtv_axe = axes[mtv_axis_index]
   if vector.dot(p2_to_p1,mtv_axe) <= 0  then
-    mtv_axe = vector.multiply_vector(mtv_axe,-1)
+    mtv_axe = vector.multiply(mtv_axe,-1)
   end
-  
-  
-  
-  
 
-  if mode then
-    local normal =  vector.normalize(vector.substract_vector(poly.position,circle.position))
-    local scalar_projection = vector.multiply_vector(normal, circle.radius)
-    local point = vector.addition(circle.position, scalar_projection)
-    
-    return true, axes[mtv_axis_index], min_overlap, point
-  else
-    return true, axes[mtv_axis_index], min_overlap
-  end
+
+
+
+
+
+  local normal =  vector.normalize(vector.substract(poly.position,circle.position))
+  local scalar_projection = vector.multiply(normal, circle.radius)
+  local point = vector.addition(circle.position, scalar_projection)
+  return true, mtv_axe, min_overlap, point
+
 
 
 end
@@ -259,15 +393,12 @@ function SAT.projection(sat_object, axis)
 
 end
 
--- Test if an object A , has a seprating axis with an object B
--- It uses the Separating Axis Theorem
--- Note : If one or both objetcs are rectangles, you should only three vertices, to get only two axis, it's enough for 
--- rectangles
+-- Test if a poly shape  A , has a seprating axis with an poly shape B
 -- @sat_object_a : array of position, vertices, type
 -- @sat_object_b : array of position, vertices, type
 -- @is_point_need : bool, if false, don't return the point of collision,  it's faster.
 -- return
-function SAT.poly_poly(sat_object_a, sat_object_b, is_point_needed)
+function SAT.poly_poly(sat_object_a, sat_object_b, mode)
 
   -- First, we look for all the axis. I save it in the axes table, an array of axis
   -- If the point is_point_needed, we will get the faces too, it will be use later, to determinethe intersection point
@@ -279,9 +410,9 @@ function SAT.poly_poly(sat_object_a, sat_object_b, is_point_needed)
     table.insert(faces,faces_b[i])
   end
 
-  -- Now you I loop over all my axis, project all the vertices and see if there is an overlap
-  -- If false, I can exit the loop early and return false
-  -- Else if collide, all the axis has to be tested
+  -- Now loop over all axis, project all the vertices and see if there is an overlap
+  -- If false, it can exits the loop early and return false
+  -- Else if collide, all the axis has to be tested.
 
   local min_a = 0
   local max_a = 0
@@ -305,35 +436,20 @@ function SAT.poly_poly(sat_object_a, sat_object_b, is_point_needed)
     min_a,max_a = SAT.projection(sat_object_a,axes[i])
     min_b,max_b = SAT.projection(sat_object_b,axes[i])
 
-    -- As overlap return 0 or positive value, becase 0 or less mean no overlap
+
     overlap = math.line_overlap(min_a, max_a, min_b, max_b)
 
-
-    print(i)
-    print(axes[i][1],axes[i][2])
-    print(min_a, max_a, min_b, max_b,overlap)
     if overlap == 0 then
       return false
     end
 
     if i == 1 then
       min_overlap = overlap
-      sat_a = true
-      sat_b = false
     else
       if overlap <= min_overlap then
         -- Save the min_overlap, and the index of the axis
         min_overlap = overlap
         mtv_axis_index = i
-
-        if i <= #sat_object_a.vertices then
-          sat_a = true
-          sat_b = false
-        else
-          sat_a = false
-          sat_b = true
-        end
-
       end
     end
 
@@ -341,110 +457,14 @@ function SAT.poly_poly(sat_object_a, sat_object_b, is_point_needed)
 
   -- The vector from the position of sat_object_b to sat_object_a. These vector will help us to determine if the mtv_axis
   -- is the correct one, and not the inverse one. The mtv_axis has to be in the opposite direction of these new vector.
-  local p2_to_p1 = vector.substract_vector(sat_object_a.position,sat_object_b.position)
-
+  local p2_to_p1 = vector.substract(sat_object_a.position,sat_object_b.position)
+  local mtv_axe = axes[mtv_axis_index]
   local face_index = mtv_axis_index
 
   if vector.dot(p2_to_p1,axes[mtv_axis_index]) <= 0 then
-    if sat_a then
-      mtv_axis_index = mtv_axis_index +2 > #sat_object_a.vertices and 1 or  mtv_axis_index +2 
-
-  else
-    local pas = (#sat_object_b.vertices/2)
-      mtv_axis_index = mtv_axis_index +pas > #sat_object_b.vertices+#sat_object_a.vertices and #sat_object_a.vertices+1 or  mtv_axis_index +pas 
-      face_index = mtv_axis_index
-    end
-
-
-  else
-    -- I don't explain these part yet, but it works
-    if sat_a then
-      face_index = mtv_axis_index +2 > #sat_object_a.vertices and 1 or  mtv_axis_index +2 
-    end
-
+    mtv_axe = vector.multiply(mtv_axe, -1)
   end
-
-
-
-
-
-  --print(axes[mtv_axis_index][1],axes[mtv_axis_index][2])
-
-  if mode then
-    return true, axes[mtv_axis_index], min_overlap
-  end
-
-
--- If we are here, the entities collide and we have found the axis associated with the mtv
--- Now we need to found : the faces involved and the point of collision
-
--- The first face, it's the face from the sat_object where the mtv_axis is from
-  local first_face = faces[face_index]
-
--- Thrase case are possible, the collision is type :
--- vertex - vertex
--- vertex - edge
--- edge - edge
--- The vertices cases, will be treat as same, we juste need to found the second face a if it's not parallele to the first one
--- take the nearest vertex.
--- Ohterwise if it's edge - edge.
-
-  local second_face = {}
-  if sat_a then
-      -- First face is on sat_object_a
-    second_face = SAT.found_nearest_edge(first_face, sat_object_b.vertices)
-  else
-      -- First face is on sat_object_b
-    second_face = SAT.found_nearest_edge(first_face, sat_object_a.vertices)
-  end
-  
-  -- Now test is the face are orthogonal
-  local v1 = vector.substract_vector(first_face[2],first_face[1])
-  local v2 = vector.substract_vector(second_face[2],second_face[1])
-  
-  local point = {}
-  if  vector.is_para(v1,v2) then
-    if sat_a then
-      point = {(first_face[1][1] + first_face[2][1])/2, (first_face[1][2] + first_face[2][2])/2}
-    else
-      point = {(second_face[1][1] + second_face[2][1])/2, (second_face[1][2] + second_face[2][2])/2}
-    end
-  else
-    -- return the nearest point 
-
-   if sat_a then
-      local ax = vector.multiply_vector(  axes[mtv_axis_index],-1)
-      if vector.dot(ax, second_face[1]) < vector.dot(ax, second_face[2]) then
-        point = second_face[1]
-      else
-        point = second_face[2]
-      end
- --    point =  SAT.found_nearest_vertex(sat_object_a.position, second_face)
-     
-    else
-      if vector.dot(axes[mtv_axis_index], second_face[1]) < vector.dot(axes[mtv_axis_index], second_face[2]) then
-        point = second_face[1]
-      else
-        point = second_face[2]
-      end
- --    point =  SAT.found_nearest_vertex(sat_object_a.position, second_face)
-     --point =  SAT.found_nearest_vertex(sat_object_b.position, second_face)
-     
-   -- point = vector.addition(point, vector.multiply_vector(axes[mtv_axis_index],min_overlap))
-  end
-  
-  
-  
-  end
-
-
-
--- The faces are optionals, but usefull for debug graphic information
-
- --print(min_overlap, axes[mtv_axis_index][1],axes[mtv_axis_index][2])
-  return true, min_overlap, axes[mtv_axis_index], point, first_face,second_face
-
-
+  return true, mtv_axe, min_overlap
 
 end
 
