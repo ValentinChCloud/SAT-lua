@@ -13,7 +13,6 @@ local SAT = require("SAT")
 
 
 
-function math.dist(point_a, point_b) return ((point_b[1]-point_a[1])^2+(point_b[2]-point_a[2])^2)^0.5 end
 
 function math.rect_vertices(position, size, rotation)
   local vertices = {}

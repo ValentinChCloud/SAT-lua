@@ -83,8 +83,8 @@ function vector.rotate(vecteur, origin, angle)
 
   local x1 = vecteur[1] - origin[1]
   local y1 = vecteur[2] - origin[2]
-   x = math.round(x1 * cosinus - y1 *sinus,2)
-   y  = math.round(x1 * sinus + y1 * cosinus,2)
+  x = math.round(x1 * cosinus - y1 *sinus,2)
+  y  = math.round(x1 * sinus + y1 * cosinus,2)
 
   local new_vector = { x + origin[1],y +origin[2]  }
 
@@ -243,10 +243,10 @@ function SAT.found_nearest_edge(face, vertices)
 end
 
 
--- @sat_object_a : table, sat_object, it's your object
--- @sat_object_b :table, sat_object, it's the object you want to test if it collides with
+-- Determine is two sat_object are colliding. It choose which function to call,  function of the shapes types.
+-- @sat_object_a : table, sat_object, it's the object you want to if it's colliding with something.
+-- @sat_object_b :table, sat_object, it's the other object.
 -- return : boolean, mtv_axis, mtv --if there is a circle object, return the intersection point on the circle.
-
 function SAT.is_colliding( sat_object_a, sat_object_b)
   if sat_object_a.type == "poly" then
     if sat_object_b.type == "poly" then
@@ -265,35 +265,37 @@ function SAT.is_colliding( sat_object_a, sat_object_b)
 
 end
 
-
-function SAT.circle_circle(c_a, c_b, mode)
+-- Determine is two circle are colliding.
+-- @c_a : table, sat_object
+-- @c_b : table, sat_object
+-- return : boolean, mtv_axis, mtv , point_of_collision
+function SAT.circle_circle(c_a, c_b)
   -- Gets the vector between the two positions
   local v1 = vector.substract(c_a.position,c_b.position)
   -- Gets its magnitude
   local d =  vector.magnitude(v1)
   -- Gets the distance total of the addition of both radius
   local radius_plus_radius = c_a.radius + c_b.radius
+
+
   -- If the mangitude of the vector if less than the radius, the circles collides
-
-
   if ( d < radius_plus_radius) then
     -- Collide
     local mtv_axis = vector.normalize(v1)
     local mtv = radius_plus_radius - d
 
-    if mode then
-      local point = vector.addition( c_a.position, vector.multiply(vector.multiply(mtv_axis,-1),c_a.radius- mtv))
-      return true, mtv_axis, mtv,point
-    else
-      return true, mtv_axis, mtv
-    end
+    local point_of_collision = vector.addition( c_a.position, vector.multiply(vector.multiply(mtv_axis,-1),c_a.radius- mtv))
+    return true, mtv_axis, mtv, point_of_collision
   end
-  -- Not collide
+  -- Not colliding
   return false
 end
 
 
--- body
+-- Determine is a circle is colliding with a poly shape.
+-- @sat_object_a : table, sat_object
+-- @sat_object_b : table, sat_object
+-- return : boolean, mtv_axis, mtv , point_of_collision
 function SAT.circle_poly(sat_object_a, sat_object_b)
   local poly = {}
   local circle = {}
@@ -355,15 +357,18 @@ function SAT.circle_poly(sat_object_a, sat_object_b)
 
   local normal =  vector.normalize(vector.substract(poly.position,circle.position))
   local scalar_projection = vector.multiply(normal, circle.radius)
-  local point = vector.addition(circle.position, scalar_projection)
-  return true, mtv_axe, min_overlap, point
+  local point_of_collision = vector.addition(circle.position, scalar_projection)
+  return true, mtv_axe, min_overlap, point_of_collision
 
 
 
 end
 
 
-
+-- Determine is a circle is colliding with a poly shape.
+-- @sat_object : table, sat_object
+-- @axis : table
+-- return : min, max, they are the minum and maximum overlap of the shap along the axis.
 function SAT.projection(sat_object, axis)
   local min,max = 0,0
   if sat_object.type == "circle" then
@@ -374,7 +379,6 @@ function SAT.projection(sat_object, axis)
   end
 
   -- Polygon type
-
   min = vector.dot(sat_object.vertices[1],axis)
   max =  vector.dot(sat_object.vertices[1],axis)
   local pro = {}
@@ -394,11 +398,10 @@ function SAT.projection(sat_object, axis)
 end
 
 -- Test if a poly shape  A , has a seprating axis with an poly shape B
--- @sat_object_a : array of position, vertices, type
--- @sat_object_b : array of position, vertices, type
--- @is_point_need : bool, if false, don't return the point of collision,  it's faster.
+-- @sat_object_a : table, sat_object
+-- @sat_object_b : table, sat_object_b
 -- return
-function SAT.poly_poly(sat_object_a, sat_object_b, mode)
+function SAT.poly_poly(sat_object_a, sat_object_b)
 
   -- First, we look for all the axis. I save it in the axes table, an array of axis
   -- If the point is_point_needed, we will get the faces too, it will be use later, to determinethe intersection point

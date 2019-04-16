@@ -3,12 +3,17 @@ Separating Axis theorem in lua.
 
 It's a simple Lua library for performing collision detection of simple 2D shapes. It uses the [Separating Axis Theorem](http://en.wikipedia.org/wiki/Hyperplane_separation_theorem)
 
+The aim is to keep it simple as possible, so you don't change the structure of your code and how you store values.
+
+
+Also it's a first try, contributions are welcome;
+
 It supports detecting collisions between:
  - Circles - Circles
  - Circles - Convex polygons
  - Convex polygons - Convex polygons
  
-If a circle is involved in the collision, it returns the points of a collision on the circle.
+If a circle is involved in the collision, it returns the point of collision on the circle.
 
 It's released under the MIT license.
 
