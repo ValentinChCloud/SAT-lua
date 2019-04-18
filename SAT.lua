@@ -256,7 +256,7 @@ function SAT.is_colliding( sat_object_a, sat_object_b)
     end
 
   elseif sat_object_b.type == "poly" then
-    return SAT.poly_poly(sat_object_a,sat_object_b)
+    return SAT.circle_poly(sat_object_a,sat_object_b)
 
   else
 
@@ -464,7 +464,7 @@ function SAT.poly_poly(sat_object_a, sat_object_b)
   local face_index = mtv_axis_index
 
   if vector.dot(p2_to_p1,axes[mtv_axis_index]) <= 0 then
-    mtv_axis = vector.multiply(mtv_axe, -1)
+    mtv_axis = vector.multiply(mtv_axis, -1)
   end
   return true, mtv_axis, min_overlap
 

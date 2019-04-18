@@ -12,6 +12,16 @@ local SAT = require("SAT")
 
 
 
+local a = 1
+
+
+function lol(chiffre)
+  chiffre = chiffre +1 
+  
+  return chiffre
+end
+
+print(lol(a))
 
 
 function math.rect_vertices(position, size, rotation)
@@ -140,6 +150,7 @@ function love.update(dt)
 
     local collide, mtv_axis, mtv = SAT.poly_poly(sat_1,sat_2, true)
     if collide then
+      print(mtv_axis[1],mtv_axis[2])
       table.insert(faces,ff)
       table.insert(faces,sf)
       table.insert(point_inter, point)
